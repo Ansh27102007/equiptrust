@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EquipTrust | Institutional Resource & Equipment Sharing Platform</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e',
+              900: '#082f49',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
+
+  <!-- TOP BAR: Hackathon Judge Persona Quick Switcher -->
+  <div class="bg-slate-900 text-white border-b border-slate-800 text-xs px-4 py-2 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-50 shadow-md">
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center px-2 py-0.5 rounded font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5 mr-1"></i> JUDGE EVALUATION MODE
+      </span>
+      <span class="text-slate-400 hidden sm:inline">| Switch personas to test the complete 10-step lifecycle:</span>
+    </div>
+    
+    <div class="flex items-center gap-1.5 overflow-x-auto py-0.5">
+      <button onclick="switchPersona('user_alex')" id="btn-user_alex" class="persona-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="font-medium">Alex (Student / CNC Cert)</span>
+      </button>
+      <button onclick="switchPersona('user_maya')" id="btn-user_maya" class="persona-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+        <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+        <span class="font-medium">Maya (Bio Grad / SEM Cert)</span>
+      </button>
+      <button onclick="switchPersona('user_jordan')" id="btn-user_jordan" class="persona-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span class="font-medium">Jordan (New / Uncertified)</span>
+      </button>
+      <button onclick="switchPersona('user_evelyn')" id="btn-user_evelyn" class="persona-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+        <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+        <span class="font-medium">Dr. Evelyn (Lab Owner / Manager)</span>
+      </button>
+      <button onclick="switchPersona('user_marcus')" id="btn-user_marcus" class="persona-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+        <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+        <span class="font-medium">Marcus (Safety Officer)</span>
+      </button>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button onclick="openJudgeGuideModal()" class="px-2.5 py-1 rounded bg-sky-600 hover:bg-sky-500 text-white font-medium flex items-center gap-1 transition shadow-sm">
+        <i data-lucide="help-circle" class="w-3.5 h-3.5"></i> Judge Guide (3 Min)
+      </button>
+      <button onclick="resetDemoData()" title="Reset database to initial demo state" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="bg-white border-b border-slate-200 sticky top-9 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-md">
+          <i data-lucide="cpu" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold text-slate-900 tracking-tight">Equip<span class="text-sky-600">Trust</span></h1>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+              Institutional Resource Sharing
+            </span>
+          </div>
+          <p class="text-xs text-slate-500">Central Polytechnic & University Research Consortium</p>
+        </div>
+      </div>
+
+      <!-- ACTIVE USER CONTEXT PILL -->
+      <div id="active-user-pill" class="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- NAVIGATION TABS -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-100">
+      <nav class="flex space-x-1 sm:space-x-4 overflow-x-auto py-2 text-sm font-medium" id="main-nav">
+        <button onclick="showTab('catalog')" id="tab-catalog" class="nav-tab active px-3 py-2 rounded-lg text-sky-700 bg-sky-50 flex items-center gap-1.5 transition">
+          <i data-lucide="search" class="w-4 h-4"></i> Browse Resources
+        </button>
+        <button onclick="showTab('my-bookings')" id="tab-my-bookings" class="nav-tab px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition">
+          <i data-lucide="calendar-check" class="w-4 h-4"></i> My Bookings & Check-In
+          <span id="badge-my-bookings" class="hidden ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-sky-100 text-sky-700">0</span>
+        </button>
+        <button onclick="showTab('manager')" id="tab-manager" class="nav-tab px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition">
+          <i data-lucide="shield-alert" class="w-4 h-4"></i> Lab Manager Portal
+          <span id="badge-manager-pending" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">1</span>
+        </button>
+        <button onclick="showTab('fairness')" id="tab-fairness" class="nav-tab px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition">
+          <i data-lucide="scale" class="w-4 h-4"></i> Fair Allocation Engine
+        </button>
+        <button onclick="showTab('audit')" id="tab-audit" class="nav-tab px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition">
+          <i data-lucide="history" class="w-4 h-4"></i> Audit Trail
+        </button>
+        <button onclick="showTab('list-resource')" id="tab-list-resource" class="nav-tab px-3 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> List Equipment
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+
+    <!-- NOTIFICATION ALERT BAR -->
+    <div id="notification-bar" class="hidden mb-6 p-4 rounded-xl border flex items-center justify-between text-sm transition-all shadow-sm">
+      <div class="flex items-center gap-2.5">
+        <i id="notif-icon" data-lucide="info" class="w-5 h-5 flex-shrink-0"></i>
+        <span id="notif-message" class="font-medium"></span>
+      </div>
+      <button onclick="dismissNotification()" class="text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 1: BROWSE & DISCOVER CATALOG (Steps 1 & 2) -->
+    <!-- ========================================== -->
+    <div id="view-catalog" class="tab-view">
+      <!-- Search & Filters -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow mb-6">
+        <div class="flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400"></i>
+            <input type="text" id="search-input" oninput="filterResources()" placeholder="Search equipment, models (e.g. 'Haas CNC', 'SEM', 'Resin 3D')..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 text-sm">
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="category-filter" onchange="filterResources()" class="px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20">
+              <option value="ALL">All Categories</option>
+              <option value="Machining & Prototyping">Machining & Prototyping</option>
+              <option value="Microscopy & Characterization">Microscopy & Characterization</option>
+              <option value="3D Printing & Additive">3D Printing & Additive</option>
+              <option value="Specialized Environment">Cleanroom & Specialized</option>
+            </select>
+
+            <button onclick="toggleEligibleOnly()" id="filter-eligible-btn" class="px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium flex items-center gap-1.5 text-slate-600 hover:bg-slate-50 transition">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+              <span>Eligible For Me</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Banner for current user eligibility summary -->
+        <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+          <div class="flex items-center gap-2">
+            <span class="font-medium text-slate-700">Your Verified Qualifications:</span>
+            <div id="user-certs-list" class="flex flex-wrap gap-1.5">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 text-slate-600">
+            <i data-lucide="shield" class="w-3.5 h-3.5 text-sky-600"></i>
+            <span>Real-time pre-flight eligibility check active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resource Grid -->
+      <div id="resource-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: MY BOOKINGS & CHECK-IN (Steps 3, 7, 8, 9) -->
+    <!-- ========================================== -->
+    <div id="view-my-bookings" class="tab-view hidden">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">My Equipment Reservations</h2>
+          <p class="text-xs text-slate-500">Track approvals, complete digital check-in on arrival, and file condition handover reports.</p>
+        </div>
+        <button onclick="showTab('catalog')" class="text-xs font-medium text-sky-600 hover:text-sky-700 flex items-center gap-1">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> Book Another Resource
+        </button>
+      </div>
+
+      <div id="my-bookings-list" class="space-y-4">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: LAB MANAGER PORTAL (Steps 5, 6, 9) -->
+    <!-- ========================================== -->
+    <div id="view-manager" class="tab-view hidden">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Lab Manager & Resource Owner Dashboard</h2>
+          <p class="text-xs text-slate-500">Review pending requests, evaluate fair access priority, inspect condition handovers, and resolve incidents.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-800 border border-sky-200">
+            Managing: Fabrication Wing & Nanoscale Lab
+          </span>
+        </div>
+      </div>
+
+      <!-- Competing Requests / Review Queue -->
+      <div class="bg-white rounded-2xl border border-slate-200 card-shadow p-5 mb-6">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <i data-lucide="clock" class="w-5 h-5 text-amber-500"></i>
+            <h3 class="font-bold text-slate-900">Pending Booking Approvals & Queue</h3>
+          </div>
+          <span class="text-xs text-slate-500">Explainable Fair Priority Matrix Active</span>
+        </div>
+
+        <div id="manager-review-queue" class="space-y-4">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Equipment Condition Status & Active Incidents -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Equipment Fleet Health -->
+        <div class="bg-white rounded-2xl border border-slate-200 card-shadow p-5">
+          <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
+            <i data-lucide="activity" class="w-5 h-5 text-emerald-600"></i>
+            <h3 class="font-bold text-slate-900">Resource Health & Calibration Log</h3>
+          </div>
+          <div id="manager-fleet-list" class="space-y-3">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Incidents & Damage Reports -->
+        <div class="bg-white rounded-2xl border border-slate-200 card-shadow p-5">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <i data-lucide="alert-triangle" class="w-5 h-5 text-rose-500"></i>
+              <h3 class="font-bold text-slate-900">Incident & Damage Tickets</h3>
+            </div>
+            <button onclick="openIncidentModal('GENERAL', 'Laboratory General Issue')" class="text-xs font-medium text-rose-600 hover:text-rose-700 flex items-center gap-1">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i> File Ticket
+            </button>
+          </div>
+          <div id="manager-incidents-list" class="space-y-3">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: FAIR ALLOCATION ENGINE -->
+    <!-- ========================================== -->
+    <div id="view-fairness" class="tab-view hidden">
+      <div class="bg-gradient-to-r from-sky-900 to-indigo-900 rounded-2xl text-white p-6 mb-6 shadow-lg">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+            <i data-lucide="scale" class="w-6 h-6 text-sky-300"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold">Transparent Fair Allocation & Anti-Monopolization</h2>
+            <p class="text-xs text-sky-200">Preventing resource hoarding while ensuring equitable access across multidisciplinary researchers.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Policy 1 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
+          <div class="w-9 h-9 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center mb-3">
+            <i data-lucide="clock" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-bold text-slate-900 text-sm mb-1">Weekly Rolling Quota Limits</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Standard student researchers are capped at <strong>8.0 peak hours/week</strong> across shared high-value tools. Unused allowances do not carry over to prevent end-of-semester reservation blitzes.
+          </p>
+        </div>
+
+        <!-- Policy 2 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
+          <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
+            <i data-lucide="trending-up" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-bold text-slate-900 text-sm mb-1">Explainable Priority Scoring</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Contested slots are resolved mathematically:
+            <code class="block bg-slate-50 p-1.5 rounded mt-1.5 text-[11px] font-mono text-slate-700">
+              Score = Base(100) - 5*(RecentHours) + 15*(FirstTimeBonus) + 10*(UrgentCurriculum)
+            </code>
+          </p>
+        </div>
+
+        <!-- Policy 3 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
+          <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center mb-3">
+            <i data-lucide="users" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-bold text-slate-900 text-sm mb-1">Transparent Waitlist Escalation</h3>
+          <p class="text-xs text-slate-500 leading-relaxed">
+            If a confirmed booking is cancelled &gt;4 hours prior, the #1 waitlisted applicant is automatically promoted with an SMS/Email ping. If unconfirmed within 2 hours, it cascades to #2.
+          </p>
+        </div>
+      </div>
+
+      <!-- Real-time Quota Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 card-shadow p-5">
+        <h3 class="font-bold text-slate-900 mb-1">Active User Quota Utilization Ledger</h3>
+        <p class="text-xs text-slate-500 mb-4">Live tracking of individual student usage to enforce anti-hoarding policies.</p>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-600 uppercase font-semibold border-y border-slate-200">
+              <tr>
+                <th class="py-3 px-4">Student Researcher</th>
+                <th class="py-3 px-4">Department</th>
+                <th class="py-3 px-4">Weekly Usage (Limit 8h)</th>
+                <th class="py-3 px-4">Priority Score</th>
+                <th class="py-3 px-4">Anti-Hoarding Status</th>
+              </tr>
+            </thead>
+            <tbody id="fairness-quota-tbody" class="divide-y divide-slate-100">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: AUDIT TRAIL & HISTORY (Step 10) -->
+    <!-- ========================================== -->
+    <div id="view-audit" class="tab-view hidden">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Tamper-Evident Institutional Audit Trail</h2>
+          <p class="text-xs text-slate-500">Immutable chronological record of every listing, approval, digital condition check-in, return, and incident.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Verified Ledger Integrity
+          </span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 card-shadow overflow-hidden">
+        <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <i data-lucide="filter" class="w-4 h-4 text-slate-400"></i>
+            <span class="font-medium text-slate-700">Filter Event Type:</span>
+            <select id="audit-filter" onchange="renderAuditLogs()" class="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white">
+              <option value="ALL">All Actions</option>
+              <option value="BOOKING_REQUESTED">Booking Requests</option>
+              <option value="BOOKING_APPROVED">Approvals</option>
+              <option value="CHECKIN_RECORDED">Check-Ins</option>
+              <option value="RETURN_CONFIRMED">Returns & Handovers</option>
+              <option value="INCIDENT_FLAGGED">Incidents</option>
+            </select>
+          </div>
+          <span id="audit-total-count" class="text-slate-500 font-mono text-[11px]">Showing all events</span>
+        </div>
+
+        <div id="audit-log-list" class="divide-y divide-slate-100">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 6: LIST EQUIPMENT (Step 1) -->
+    <!-- ========================================== -->
+    <div id="view-list-resource" class="tab-view hidden">
+      <div class="max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 card-shadow p-6">
+        <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+          <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
+            <i data-lucide="plus-circle" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">List an Institutional Resource</h2>
+            <p class="text-xs text-slate-500">Publish underused tools or spaces with mandatory safety prerequisites and fair-usage parameters.</p>
+          </div>
+        </div>
+
+        <form onsubmit="submitNewResource(event)" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Equipment / Facility Name *</label>
+              <input type="text" id="new-res-name" required placeholder="e.g. Renishaw inVia Raman Microscope" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Category *</label>
+              <select id="new-res-cat" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+                <option value="Machining & Prototyping">Machining & Prototyping</option>
+                <option value="Microscopy & Characterization">Microscopy & Characterization</option>
+                <option value="3D Printing & Additive">3D Printing & Additive</option>
+                <option value="Specialized Environment">Cleanroom & Specialized Space</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Physical Location *</label>
+              <input type="text" id="new-res-loc" required placeholder="e.g. Physics Annex, Lab B-14" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Mandatory Safety Qualification *</label>
+              <select id="new-res-cert" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+                <option value="General Workshop Safety">General Workshop Safety (Entry Level)</option>
+                <option value="CNC Machine Level 1">CNC Machine Level 1</option>
+                <option value="SEM Imaging Specialist">SEM Imaging Specialist</option>
+                <option value="Radiation & Bio Safety L2">Radiation & Bio Safety L2</option>
+                <option value="Laser Safety Protocol">Laser Safety Protocol</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Description & Operational Scope</label>
+            <textarea id="new-res-desc" rows="3" placeholder="Provide technical capabilities, acceptable materials, and safety directives..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Max Slot Hours</label>
+              <input type="number" id="new-res-max-hours" value="4" min="1" max="12" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Weekly Quota Cap (Hours)</label>
+              <input type="number" id="new-res-quota" value="8" min="2" max="20" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Security Deposit ($)</label>
+              <input type="number" id="new-res-deposit" value="100" min="0" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+            <button type="button" onclick="showTab('catalog')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Cancel</button>
+            <button type="submit" class="px-5 py-2 text-sm font-semibold rounded-xl bg-sky-600 hover:bg-sky-500 text-white transition shadow-sm">
+              Publish Resource Listing
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODAL 1: BOOKING REQUEST DIALOG (Steps 3 & 4) -->
+  <!-- ========================================== -->
+  <div id="modal-booking" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 card-shadow border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center">
+            <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+          </div>
+          <h3 class="font-bold text-slate-900" id="modal-book-title">Request Resource Access</h3>
+        </div>
+        <button onclick="closeModal('modal-booking')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Eligibility Check Status Banner -->
+      <div id="modal-book-eligibility-badge" class="mb-4 p-3 rounded-xl text-xs flex items-center gap-2">
+        <!-- Rendered by JS -->
+      </div>
+
+      <form onsubmit="submitBookingRequest(event)" class="space-y-4">
+        <input type="hidden" id="modal-book-res-id">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Project / Research Title *</label>
+          <input type="text" id="modal-book-project" required placeholder="e.g. Formula Student Suspension Knuckle Milling" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Purpose & Material Statement *</label>
+          <textarea id="modal-book-purpose" rows="2" required placeholder="Specify intended materials, chemical agents, or mechanical fixtures to be mounted..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Start Time *</label>
+            <input type="datetime-local" id="modal-book-start" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Duration (Hours) *</label>
+            <select id="modal-book-duration" onchange="updateBookingEndTime()" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+              <option value="1">1.0 Hour</option>
+              <option value="2" selected>2.0 Hours</option>
+              <option value="3">3.0 Hours</option>
+              <option value="4">4.0 Hours (Max)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Quota Impact Gauge -->
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+          <div class="flex justify-between font-medium text-slate-700 mb-1">
+            <span>Fair-Usage Weekly Quota Impact</span>
+            <span id="modal-book-quota-text">2.5h + 2.0h = 4.5 / 8.0h</span>
+          </div>
+          <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+            <div id="modal-book-quota-bar" class="bg-sky-600 h-full" style="width: 56%"></div>
+          </div>
+        </div>
+
+        <!-- Safety Pledge Checkbox -->
+        <div class="flex items-start gap-2 pt-2">
+          <input type="checkbox" id="modal-book-pledge" required class="mt-0.5 rounded text-sky-600 focus:ring-sky-500">
+          <label for="modal-book-pledge" class="text-xs text-slate-600 leading-snug">
+            I certify that I have read the SOP, will wear mandatory PPE, will report any anomaly during pre-flight check-in, and will leave the station clean.
+          </label>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-booking')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Cancel</button>
+          <button type="submit" id="modal-book-submit-btn" class="px-5 py-2 text-sm font-semibold rounded-xl bg-sky-600 hover:bg-sky-500 text-white transition shadow-sm">
+            Submit Access Request
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL 2: DIGITAL CHECK-IN (Step 7) -->
+  <!-- ========================================== -->
+  <div id="modal-checkin" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 card-shadow border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+            <i data-lucide="camera" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900">Step 7: Digital Equipment Check-In</h3>
+            <p class="text-[11px] text-slate-500" id="modal-checkin-res-name">Verifying pre-operational baseline condition</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-checkin')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form onsubmit="submitCheckIn(event)" class="space-y-4">
+        <input type="hidden" id="modal-checkin-booking-id">
+
+        <!-- Photo Capture / Evidence Preview -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+            <span>Pre-Flight Condition Photo Verification</span>
+            <span class="text-emerald-600 font-normal text-[11px] flex items-center gap-1">
+              <i data-lucide="check" class="w-3 h-3"></i> AI Lens Ready
+            </span>
+          </label>
+          <div class="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900 aspect-video flex items-center justify-center group">
+            <img id="checkin-preview-img" src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600" class="w-full h-full object-cover opacity-90">
+            <div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition p-4 text-center">
+              <span class="text-xs text-white">Capture or select pre-flight station photo</span>
+              <button type="button" onclick="randomizePhoto('checkin-preview-img')" class="px-3 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs backdrop-blur font-medium">
+                Simulate Camera Snapshot
+              </button>
+            </div>
+            <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur text-[10px] text-white px-2 py-0.5 rounded font-mono">
+              CAM_01: NOMINAL_BASELINE
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Hour Meter / Odometer</label>
+            <input type="number" step="0.1" id="modal-checkin-meter" value="1420.5" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Baseline Rating</label>
+            <select id="modal-checkin-rating" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+              <option value="5.0">5.0 - Pristine / Clean</option>
+              <option value="4.5">4.5 - Minor Cosmetic Wear</option>
+              <option value="3.5">3.5 - Noticeable Wear</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Mandatory Pre-Flight Checklist -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5">Mandatory Pre-Flight Safety Verification</label>
+          <div class="space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" required checked class="rounded text-emerald-600 focus:ring-emerald-500">
+              <span>Emergency stop button tested and mechanical interlocks clear</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" required checked class="rounded text-emerald-600 focus:ring-emerald-500">
+              <span>Optical lenses, collet, or chuck inspected for chips or debris</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" required checked class="rounded text-emerald-600 focus:ring-emerald-500">
+              <span>Personal protective equipment (safety glasses/gloves) active</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Pre-Flight Condition Notes</label>
+          <input type="text" id="modal-checkin-notes" value="Machine bed clean, spindle free of play, coolant level verified at 85%." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-checkin')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-sm font-semibold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-sm flex items-center gap-1.5">
+            <i data-lucide="check-circle" class="w-4 h-4"></i> Confirm Check-In & Unlock
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL 3: DIGITAL RETURN & HANDOVER (Step 8) -->
+  <!-- ========================================== -->
+  <div id="modal-checkout" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 card-shadow border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center">
+            <i data-lucide="check-square" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900">Step 8: Digital Return & Handover</h3>
+            <p class="text-[11px] text-slate-500" id="modal-checkout-res-name">Record return condition & AI delta analysis</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-checkout')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form onsubmit="submitCheckOut(event)" class="space-y-4">
+        <input type="hidden" id="modal-checkout-booking-id">
+
+        <!-- Return Photo -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+            <span>Post-Operation Condition Photo</span>
+            <span class="text-sky-600 font-normal text-[11px] flex items-center gap-1">
+              <i data-lucide="sparkles" class="w-3 h-3"></i> AI Delta Comparison Ready
+            </span>
+          </label>
+          <div class="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900 aspect-video flex items-center justify-center group">
+            <img id="checkout-preview-img" src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600" class="w-full h-full object-cover opacity-90">
+            <div class="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition p-4 text-center">
+              <span class="text-xs text-white">Capture clean station return photo</span>
+              <button type="button" onclick="randomizePhoto('checkout-preview-img')" class="px-3 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs backdrop-blur font-medium">
+                Simulate Return Snapshot
+              </button>
+            </div>
+            <div class="absolute bottom-2 left-2 bg-black/60 backdrop-blur text-[10px] text-white px-2 py-0.5 rounded font-mono">
+              CAM_02: RETURN_INSPECTION
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Final Meter Reading (Hours)</label>
+            <input type="number" step="0.1" id="modal-checkout-meter" value="1423.5" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Cleanliness State</label>
+            <select id="modal-checkout-cleanliness" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+              <option value="CLEAN">Pristine / Vacuumed</option>
+              <option value="ACCEPTABLE">Acceptable / Normal</option>
+              <option value="NEEDS_ATTENTION">Requires Janitorial Sweep</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Post-Op Checklist -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5">Mandatory Return Checklist</label>
+          <div class="space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" required checked class="rounded text-sky-600 focus:ring-sky-500">
+              <span>Chips/debris cleaned from bed and vacuumed</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" required checked class="rounded text-sky-600 focus:ring-sky-500">
+              <span>Tools wiped, demagnetized and returned to tool carousel</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" required checked class="rounded text-sky-600 focus:ring-sky-500">
+              <span>Auxiliary compressors and nitrogen gas supplies isolated</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Consumables & Session Notes</label>
+          <input type="text" id="modal-checkout-notes" value="Job completed successfully. Used 1x 1/4in endmill, wiped down guide rails." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+        </div>
+
+        <!-- Option to flag damage -->
+        <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-xs flex items-center justify-between">
+          <div class="flex items-center gap-2 text-rose-800">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 flex-shrink-0"></i>
+            <span>Did an unexpected tooling chip, scratch, or incident occur?</span>
+          </div>
+          <button type="button" onclick="triggerIncidentFromCheckout()" class="px-2.5 py-1 rounded bg-rose-600 text-white font-medium hover:bg-rose-500 transition">
+            Report Incident
+          </button>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-checkout')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-sm font-semibold rounded-xl bg-sky-600 hover:bg-sky-500 text-white transition shadow-sm flex items-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i> Finalize Return & Log Handover
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL 4: INCIDENT / DAMAGE REPORTING (Step 9) -->
+  <!-- ========================================== -->
+  <div id="modal-incident" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 card-shadow border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center">
+            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900">Step 9: Incident & Damage Ticket</h3>
+            <p class="text-[11px] text-slate-500">File an auditable damage, delay, or equipment malfunction report</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-incident')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form onsubmit="submitIncident(event)" class="space-y-4">
+        <input type="hidden" id="modal-inc-booking-id">
+        <input type="hidden" id="modal-inc-res-id">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Equipment / Resource</label>
+          <input type="text" id="modal-inc-res-name" readonly class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 bg-slate-50 text-slate-600">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Severity Level *</label>
+            <select id="modal-inc-severity" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+              <option value="LOW">Low (Cosmetic scratch / Minor delay)</option>
+              <option value="MEDIUM" selected>Medium (Consumable damage / Tool fracture)</option>
+              <option value="HIGH">High (Spindle jam / Lens contamination)</option>
+              <option value="CRITICAL">Critical (Safety interlock fault / Emergency stop)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Estimated Remediation ($)</label>
+            <input type="number" id="modal-inc-cost" value="75" min="0" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Incident Summary Title *</label>
+          <input type="text" id="modal-inc-title" required value="Carbide Endmill Fracture on High-Feed Pass" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Detailed Description & Root Cause *</label>
+          <textarea id="modal-inc-desc" rows="3" required placeholder="Explain exactly what happened, operating feed rate, material stock, and immediate actions taken..." class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200">During the contour finishing pass on 7075-T6 aluminum, high-pitch chatter occurred. Tool fractured at collet interface. Machine halted immediately. No spindle or vise damage observed.</textarea>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeModal('modal-incident')" class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-sm font-semibold rounded-xl bg-rose-600 hover:bg-rose-500 text-white transition shadow-sm flex items-center gap-1.5">
+            <i data-lucide="send" class="w-4 h-4"></i> File Incident & Notify Owner
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL 5: JUDGE GUIDE & 3-MINUTE WALKTHROUGH -->
+  <!-- ========================================== -->
+  <div id="modal-judge-guide" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 card-shadow border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center">
+            <i data-lucide="compass" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-900">Judge Walkthrough Guide (3-Minute Tour)</h3>
+            <p class="text-[11px] text-slate-500">How to test all 10 problem statement requirements unassisted</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-judge-guide')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs text-slate-600 leading-relaxed">
+        <div class="bg-sky-50 border border-sky-200 p-3.5 rounded-xl">
+          <span class="font-bold text-sky-900 block mb-1">🚀 Fast 1-Click Evaluation Path:</span>
+          <p class="text-sky-800">
+            You do not need to register accounts or wait for real calendar hours. Use the top persona buttons to test both the Student and Owner sides instantly!
+          </p>
+        </div>
+
+        <div class="space-y-2.5">
+          <div class="p-2.5 rounded-lg border border-slate-200 flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center flex-shrink-0 text-[10px] font-bold">1</span>
+            <div>
+              <strong class="text-slate-900">Eligibility Verification:</strong> Click <em>Jordan (New / Uncertified)</em> $\rightarrow$ try booking the Haas CNC Mill $\rightarrow$ notice the system blocks the request because Jordan lacks the "CNC Machine Level 1" cert! Then switch to <em>Alex (Certified)</em> to see instant approval clearance.
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-lg border border-slate-200 flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center flex-shrink-0 text-[10px] font-bold">2</span>
+            <div>
+              <strong class="text-slate-900">Owner Review & Approval:</strong> Switch to <em>Dr. Evelyn (Lab Owner)</em> $\rightarrow$ click <strong>Lab Manager Portal</strong> $\rightarrow$ review Alex's pending request with the explainable priority score $\rightarrow$ click <strong>Approve Slot</strong>.
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-lg border border-slate-200 flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center flex-shrink-0 text-[10px] font-bold">3</span>
+            <div>
+              <strong class="text-slate-900">Digital Check-In & Condition Capture:</strong> Switch back to <em>Alex</em> $\rightarrow$ open <strong>My Bookings</strong> $\rightarrow$ click <strong>Start Digital Check-In</strong> $\rightarrow$ confirm safety checklist & baseline photo.
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-lg border border-slate-200 flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center flex-shrink-0 text-[10px] font-bold">4</span>
+            <div>
+              <strong class="text-slate-900">Return, AI Delta & Damage Handling:</strong> In <strong>My Bookings</strong> $\rightarrow$ click <strong>Complete Return & Handover</strong> $\rightarrow$ view AI comparison delta $\rightarrow$ or click <em>Report Incident</em> to flag an endmill fracture.
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-lg border border-slate-200 flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-slate-900 text-white flex items-center justify-center flex-shrink-0 text-[10px] font-bold">5</span>
+            <div>
+              <strong class="text-slate-900">Fair Allocation & Audit Trail:</strong> Open <strong>Fair Allocation Engine</strong> to see anti-monopolization quotas $\rightarrow$ open <strong>Audit Trail</strong> to view the tamper-evident chronological ledger.
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+          <button onclick="resetDemoData()" class="text-slate-500 hover:text-slate-700 flex items-center gap-1">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset Demo Data
+          </button>
+          <button onclick="closeModal('modal-judge-guide')" class="px-4 py-1.5 rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-500 transition">
+            Start Tour Now
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-xs text-slate-500 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <i data-lucide="cpu" class="w-4 h-4 text-sky-600"></i>
+        <span><strong>EquipTrust</strong> &copy; 2026 Institutional Resource Sharing Consortium</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <span>Built for 48-Hour Hackathon</span>
+        <span>•</span>
+        <button onclick="openJudgeGuideModal()" class="text-sky-600 hover:underline">Evaluation Guide</button>
+        <span>•</span>
+        <button onclick="showTab('audit')" class="text-sky-600 hover:underline">Audit Ledger</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
